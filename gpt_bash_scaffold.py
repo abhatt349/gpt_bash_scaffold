@@ -5,14 +5,14 @@ import random
 import os
 import subprocess
 
-with open('openai_api_key.txt', 'r') as file:
+with open('/home/aryan/gpt_bash_scaffold/openai_api_key.txt', 'r') as file:
     os.environ['OPENAI_API_KEY'] = file.read().strip()
 client = OpenAI()
 
 
 def gpt_scaffold_shell():
 
-    sys_prompt = """You are being run in a scaffold in a shell on a Macbook. 
+    sys_prompt = """You are being run in a scaffold in a shell on a linux machine running Ubuntu. 
 When you want to run a shell command, write it in a <bash> XML tag. 
 You will be shown the result of the command and be able to run more commands. 
 Other things you say will be sent to the user. 
@@ -68,7 +68,7 @@ If you can't do something without assistance, please suggest a way of doing it w
 
 def gpt_scaffold_shell_streaming():
 
-    sys_prompt = """You are being run in a scaffold in a shell on a Macbook. 
+    sys_prompt = """You are being run in a scaffold in a shell on a linux machine running Ubuntu. 
 When you want to run a shell command, write it in a <bash> XML tag. 
 You will be shown the result of the command and be able to run more commands. 
 Other things you say will be sent to the user. 
@@ -101,6 +101,16 @@ If you can't do something without assistance, please suggest a way of doing it w
             bash_to_run = None
 
         messages_so_far.append({"role": "user", "content": user_input})
+        total_chars = sum([len(m['content']) for m in messages_so_far])
+        if total_chars > 100000:
+            confirmation = input(f'History is {total_chars} characters long. Are you sure you want to send this much text? (y/N)')
+            if confirmation.lower().strip() != 'y':
+                break
+        if total_chars > 20000:
+            confirmation = input(f'History is {total_chars} characters long. Do you want to cut out the first 1/3 of messages? (y/N)')
+            if confirmation.lower().strip() == 'y':
+                messages_so_far = messages_so_far[-2*len(messages_so_far)//3:]
+            
         print('asking...')
         stream = client.chat.completions.create(
             model="gpt-4-1106-preview",
